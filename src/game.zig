@@ -11,16 +11,17 @@ pub fn init() void {
 
     var ent = ecsreg.create();
     ecsreg.add(ent, defs.Position{.x = 0, .y = 20});
-    ecsreg.add(ent, defs.Velocity{.x = 30, .y = 0});
-    ecsreg.add(ent, defs.Mass{.amount = 2});
+    ecsreg.add(ent, defs.Velocity{.x = 0, .y = 20});
+    //ecsreg.add(ent, defs.Mass{.amount = 0});
+    ecsreg.add(ent, defs.Player{});
 }
 
-pub fn process(delta: f64) void {
+pub fn process(delta: f32) void {
     defs.processGravity(&ecsreg, gravity, delta);
     defs.processVelocity(&ecsreg, delta);
 }
 
-pub fn draw(delta: f64) void {
-    defs.processDrawables(&ecsreg, delta);
+pub fn draw(delta: f32) void {
+    defs.drawPlayer(&ecsreg, delta);
 }
 pub fn cleanup() void { ecsreg.deinit(); }

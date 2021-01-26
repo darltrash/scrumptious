@@ -21,13 +21,24 @@ const Vertex = packed struct {
     u: i16, v: i16
 };
 
+const _keystruct = struct {
+    up:     bool = false,
+    down:   bool = false,
+    left:   bool = false,
+    right:  bool = false,
+
+    attack: bool = false,
+    any:    bool = false
+};
+pub var key = _keystruct{};
+
 var pass_action: sg.PassAction = .{};
 var pip: sg.Pipeline = .{};
 var bind: sg.Bindings = .{};
 pub var screenWidth: f32 = 0;
 pub var screenHeight: f32 = 0;
 
-var delta: f64 = 0;
+var delta: f32 = 0;
 
 export fn init() void {
     sg.setup(.{ .context = sgapp.context() });
@@ -110,7 +121,7 @@ export fn frame() void {
             }
         sg.endPass();
         sg.commit();
-    delta = stime.sec(stime.diff(stime.now(), preframe));
+    delta = @floatCast(f32, stime.sec(stime.diff(stime.now(), preframe)));
 }
 
 export fn cleanup() void {
@@ -120,14 +131,19 @@ export fn cleanup() void {
     sg.shutdown();
 }
 
-pub fn setState(newState: state) void {
-    switch(currentState) {
-        state.game => gamestate.cleanup()
+export fn input(ev: ?*const sapp.Event) void {
+    const event = ev.?;
+    if ((event.type == .KEY_DOWN) or (event.type == .KEY_UP)) {
+        const key_pressed = event.type == .KEY_DOWN;
+        key.any = key_pressed;
+        switch (event.key_code) {
+            .W, .UP,    => key.up = key_pressed,
+            .S, .DOWN,  => key.down = key_pressed,
+            .A, .LEFT,  => key.left = key_pressed,
+            .D, .RIGHT, => key.right = key_pressed,
+            else => {}
+        }
     }
-    switch(currentState) {
-        state.game => gamestate.init()
-    }
-    currentState = newState;
 }
 
 pub fn main() void {
@@ -140,4 +156,14 @@ pub fn main() void {
         .height = 600,
         .window_title = "PROJECT SCRUMPTIOUS",
     });
+}
+
+pub fn setState(newState: state) void {
+    switch(currentState) {
+        state.game => gamestate.cleanup()
+    }
+    switch(currentState) {
+        state.game => gamestate.init()
+    }
+    currentState = newState;
 }

@@ -6,8 +6,12 @@
 const assert = @import("std").debug.assert;
 const math = @import("std").math;
 
-fn radians(deg: f32) f32 {
+pub fn radians(deg: f32) f32 {
     return deg * (math.pi / 180.0);
+}
+
+pub fn lerp(a: f32, b: f32, t: f32) f32 {
+    return a * (1-t) + b * t;
 }
 
 pub const Vec2 = packed struct {

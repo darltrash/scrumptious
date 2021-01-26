@@ -1,5 +1,6 @@
 const std = @import("std");
 const ecs = @import("ecs");
+const math = @import("math.zig");
 const sokol = @import("sokol");
 const main = @import("main.zig");
 
@@ -70,7 +71,7 @@ pub const Player = struct {
     enableMovement: bool = true,
     currentState: PlayerStates = PlayerStates.normal,
     character: PlayerCharacter = PlayerCharacter.goathim,
-    velocity: f32 = 200
+    velocity: f32 = 100
 };
 
 pub fn processPlayer(reg: *ecs.Registry, delta: f32) void {
@@ -82,8 +83,8 @@ pub fn processPlayer(reg: *ecs.Registry, delta: f32) void {
         var player = view.get(Player, entity);
         var keypress = main.getKeys();
 
-        vel.*.x = 0;
-        vel.*.y = 0;
+        vel.*.x = math.lerp(vel.*.x, 0, 12 * delta);
+        vel.*.y = math.lerp(vel.*.y, 0, 12 * delta);
 
         if (keypress.up) {
             vel.*.y -= player.velocity;

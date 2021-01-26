@@ -11,13 +11,13 @@ pub fn init() void {
 
     var ent = ecsreg.create();
     ecsreg.add(ent, defs.Position{.x = 0, .y = 20});
-    ecsreg.add(ent, defs.Velocity{.x = 0, .y = 20});
-    //ecsreg.add(ent, defs.Mass{.amount = 0});
+    ecsreg.add(ent, defs.Velocity{.x = 0, .y = 0});
     ecsreg.add(ent, defs.Player{});
 }
 
 pub fn process(delta: f32) void {
     defs.processGravity(&ecsreg, gravity, delta);
+    defs.processPlayer(&ecsreg, delta);
     defs.processVelocity(&ecsreg, delta);
 }
 

@@ -30,7 +30,7 @@ const _keystruct = struct {
     attack: bool = false,
     any:    bool = false
 };
-pub var key = _keystruct{};
+var key = _keystruct{};
 
 var pass_action: sg.PassAction = .{};
 var pip: sg.Pipeline = .{};
@@ -146,12 +146,17 @@ export fn input(ev: ?*const sapp.Event) void {
     }
 }
 
+pub fn getKeys() *_keystruct {
+    return &key;
+}
+
 pub fn main() void {
     setState(state.game);
     sapp.run(.{
         .init_cb = init,
         .frame_cb = frame,
         .cleanup_cb = cleanup,
+        .event_cb = input,
         .width = 1024,
         .height = 600,
         .window_title = "PROJECT SCRUMPTIOUS",

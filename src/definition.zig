@@ -69,11 +69,40 @@ pub const PlayerCharacter = enum { goathim, humanher };
 pub const Player = struct {
     enableMovement: bool = true,
     currentState: PlayerStates = PlayerStates.normal,
-    character: PlayerCharacter = PlayerCharacter.goathim
+    character: PlayerCharacter = PlayerCharacter.goathim,
+    velocity: f32 = 200
 };
 
+pub fn processPlayer(reg: *ecs.Registry, delta: f32) void {
+    var view = reg.view(.{ Velocity, Player }, .{});
+    var iter = view.iterator();
+
+    while (iter.next()) |entity| {
+        var vel = view.get(Velocity, entity);
+        var player = view.get(Player, entity);
+        var keypress = main.getKeys();
+
+        vel.*.x = 0;
+        vel.*.y = 0;
+
+        if (keypress.up) {
+            vel.*.y -= player.velocity;
+        }
+        if (keypress.down) {
+            vel.*.y += player.velocity;
+        }
+
+        if (keypress.left) {
+            vel.*.x -= player.velocity;
+        }
+        if (keypress.right) {
+            vel.*.x += player.velocity;
+        }
+    }
+}
+
 pub fn drawPlayer(reg: *ecs.Registry, delta: f32) void {
-    var view = reg.view(.{ Position, Velocity, Player }, .{});
+    var view = reg.view(.{ Position, Player }, .{});
     var iter = view.iterator();
 
     while (iter.next()) |entity| {

@@ -66,11 +66,11 @@ pub const AABB = struct {
 };
 
 pub const PlayerStates = enum { normal, falling, dizzy };
-pub const PlayerCharacter = enum { goathim, humanher };
+pub const PlayerCharacter = enum { koli, sis }; // koli is his name.
 pub const Player = struct {
     enableMovement: bool = true,
     currentState: PlayerStates = PlayerStates.normal,
-    character: PlayerCharacter = PlayerCharacter.goathim,
+    character: PlayerCharacter = PlayerCharacter.koli,
     velocity: f32 = 100
 };
 
@@ -83,21 +83,27 @@ pub fn processPlayer(reg: *ecs.Registry, delta: f32) void {
         var player = view.get(Player, entity);
         var keypress = main.getKeys();
 
-        vel.*.x = math.lerp(vel.*.x, 0, 12 * delta);
-        vel.*.y = math.lerp(vel.*.y, 0, 12 * delta);
+        switch (player.currentState) {
+            PlayerStates.normal => {
+                vel.*.x = math.lerp(vel.*.x, 0, 12 * delta);
+                vel.*.y = math.lerp(vel.*.y, 0, 12 * delta);
 
-        if (keypress.up) {
-            vel.*.y -= player.velocity;
-        }
-        if (keypress.down) {
-            vel.*.y += player.velocity;
-        }
+                if (keypress.up) {
+                    vel.*.y -= player.velocity;
+                }
+                if (keypress.down) {
+                    vel.*.y += player.velocity;
+                }
 
-        if (keypress.left) {
-            vel.*.x -= player.velocity;
-        }
-        if (keypress.right) {
-            vel.*.x += player.velocity;
+                if (keypress.left) {
+                    vel.*.x -= player.velocity;
+                }
+                if (keypress.right) {
+                    vel.*.x += player.velocity;
+                }
+            },
+
+            else => unreachable
         }
     }
 }

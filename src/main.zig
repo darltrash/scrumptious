@@ -8,8 +8,8 @@ const sfetch = @import("sokol").fetch;
 
 const stbi = @import("stbi");
 
-const vec3  = @import("math.zig").Vec3;
-const mat4  = @import("math.zig").Mat4;
+const vec3 = @import("math.zig").Vec3;
+const mat4 = @import("math.zig").Mat4;
 const shd = @import("shaders/mainshader.zig");
 
 pub const state = enum(u2) { game };
@@ -40,8 +40,22 @@ var pip: sg.Pipeline = .{};
 var bind: sg.Bindings = .{};
 pub var screenWidth: f32 = 0;
 pub var screenHeight: f32 = 0;
+pub var textures: [16]sg.Image = undefined;
 
 var delta: f32 = 0;
+
+pub fn newTexture(data: *const [1024]u32, width: i32, height: i32) sg.Image {
+    var img_desc: sg.ImageDesc = .{
+        .width = width,
+        .height = height,
+    };
+    img_desc.data.subimage[0][0] = sg.asRange(data);
+    return sg.makeImage(img_desc);
+}
+
+pub fn setTexture(data: sg.Image) void {
+    bind.fs_images[shd.SLOT_tex] = data;
+}
 
 export fn init() void {
     sg.setup(.{ .context = sgapp.context() });
@@ -54,7 +68,7 @@ export fn init() void {
 
     const N = 0x00000000;
     const Y = 0xFFFFFFFF;
-    const pixels = [32*32]u32 { // Much better :)   Still sorry :(
+    const pixels1 = [32*32]u32 { // Much better :)   Still sorry :(
         N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,
         N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,
         N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,
@@ -88,12 +102,8 @@ export fn init() void {
         N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,
         N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
     };
-    var img_desc: sg.ImageDesc = .{
-        .width = 32,
-        .height = 32,
-    };
-    img_desc.data.subimage[0][0] = sg.asRange(pixels);
-    bind.fs_images[shd.SLOT_tex] = sg.makeImage(img_desc);
+
+    setTexture(newTexture(&pixels1, 32, 32));
 
     // SETUP QUAD MESH (needed for all the sprites mumbo jumbo)
     const QuadVertices = [_]Vertex{
@@ -176,7 +186,7 @@ export fn input(ev: ?*const sapp.Event) void {
         key.any = key_pressed;
         switch (event.key_code) {
             .W, .UP,    => key.up = key_pressed,
-            .S, .DOWN, => key.down = key_pressed,
+            .S, .DOWN,  => key.down = key_pressed,
             .A, .LEFT,  => key.left = key_pressed,
             .D, .RIGHT, => key.right = key_pressed,
             else => {}

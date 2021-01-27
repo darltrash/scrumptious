@@ -45,7 +45,6 @@ pub const Drawable = struct {
     sx: f32 = 1, sy: f32 = 1
 };
 
-
 // Name     Static     Collides with
 // -------- ---------- -------------------
 // World    True       Nothing
@@ -116,7 +115,7 @@ pub fn drawPlayer(reg: *ecs.Registry, delta: f32) void {
         var pos = view.get(Position, entity);
         var vel = view.get(Velocity, entity);
 
-        main.rectangle(pos.x, pos.y, 30, 30);
+        main.rectangle(pos.x, pos.y, 64, 64);
     }
 }
 

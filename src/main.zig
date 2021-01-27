@@ -4,6 +4,9 @@ const sg = @import("sokol").gfx;
 const sapp = @import("sokol").app;
 const stime = @import("sokol").time;
 const sgapp = @import("sokol").app_gfx_glue;
+const sfetch = @import("sokol").fetch;
+
+const stbi = @import("stbi");
 
 const vec3  = @import("math.zig").Vec3;
 const mat4  = @import("math.zig").Mat4;
@@ -17,7 +20,7 @@ const Vertex = packed struct {
     x: f32 = 0,
     y: f32 = 0,
     z: f32 = 0,
-    color: u32 = 0xFFFFFF,
+    color: u32 = 0xFFFFFFFF,
     u: i16, v: i16
 };
 
@@ -108,6 +111,15 @@ export fn init() void {
     var pip_desc: sg.PipelineDesc = .{
         .shader = sg.makeShader(shd.shaderDesc(sg.queryBackend())),
         .index_type = .UINT16,
+
+//         .depth_stencil = .{
+//             .depth_compare_func = .,
+//             .depth_write_enabled = true,
+//        },
+        .blend = .{
+            .enabled = true,
+            .blend_color = [4]f32{ 1.0, 0.0, 0.0, 1.0 }
+        }
     };
 
     pip_desc.layout.attrs[shd.ATTR_vs_pos].format = .FLOAT3;

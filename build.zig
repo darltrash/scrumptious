@@ -52,6 +52,8 @@ pub fn build(b: *bld.Builder) void {
     const e = b.addExecutable("PROJECT SCRUMPTIOUS", "src/main.zig");
     e.linkLibrary(buildSokol(b, ""));
     e.setBuildMode(b.standardReleaseOptions());
+    e.addIncludeDir("src/cute/");
+    e.addPackagePath("cute", "src/cute/cute.zig");
     e.addPackagePath("sokol", "src/sokol/sokol.zig");
     e.addPackagePath("ecs", "src/ecs/ecs.zig");
     e.install();

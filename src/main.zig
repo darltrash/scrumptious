@@ -6,8 +6,6 @@ const stime = @import("sokol").time;
 const sgapp = @import("sokol").app_gfx_glue;
 const sfetch = @import("sokol").fetch;
 
-const stbi = @import("stbi");
-
 const vec3 = @import("math.zig").Vec3;
 const mat4 = @import("math.zig").Mat4;
 const shd = @import("shaders/mainshader.zig");
@@ -31,6 +29,13 @@ const _keystruct = struct {
     right:  bool = false,
 
     attack: bool = false,
+
+    up2:     bool = false,
+    down2:   bool = false,
+    left2:   bool = false,
+    right2:  bool = false,
+
+    attack2: bool = false,
     any:    bool = false
 };
 var key = _keystruct{};
@@ -67,7 +72,7 @@ export fn init() void {
     stime.setup();
 
     const N = 0x00000000;
-    const Y = 0xFFFFFFFF;
+    const Y = 0xFF0950FF;
     const pixels1 = [32*32]u32 { // Much better :)   Still sorry :(
         N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,
         N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,
@@ -126,7 +131,12 @@ export fn init() void {
 
         .blend = .{
             .enabled = true,
-            .blend_color = [4]f32{ 1.0, 0.0, 0.0, 1.0 }
+            .src_factor_rgb = .SRC_ALPHA,
+            .dst_factor_rgb = .ONE_MINUS_SRC_ALPHA,
+            .op_rgb = .ADD,
+            .src_factor_alpha = .SRC_ALPHA,
+            .dst_factor_alpha = .ONE_MINUS_SRC_ALPHA,
+            .op_alpha = .ADD
         }
     };
 
@@ -185,10 +195,15 @@ export fn input(ev: ?*const sapp.Event) void {
         const key_pressed = event.type == .KEY_DOWN;
         key.any = key_pressed;
         switch (event.key_code) {
-            .W, .UP,    => key.up = key_pressed,
-            .S, .DOWN,  => key.down = key_pressed,
-            .A, .LEFT,  => key.left = key_pressed,
-            .D, .RIGHT, => key.right = key_pressed,
+            .W => key.up = key_pressed,
+            .S => key.down = key_pressed,
+            .A => key.left = key_pressed,
+            .D => key.right = key_pressed,
+
+            .UP    => key.up2 = key_pressed,
+            .DOWN  => key.down2 = key_pressed,
+            .LEFT  => key.left2 = key_pressed,
+            .RIGHT => key.right2 = key_pressed,
             else => {}
         }
     }

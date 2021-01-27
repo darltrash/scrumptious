@@ -82,27 +82,52 @@ pub fn processPlayer(reg: *ecs.Registry, delta: f32) void {
         var player = view.get(Player, entity);
         var keypress = main.getKeys();
 
-        switch (player.currentState) {
-            PlayerStates.normal => {
-                vel.*.x = math.lerp(vel.*.x, 0, 12 * delta);
-                vel.*.y = math.lerp(vel.*.y, 0, 12 * delta);
+        switch (player.character) {
+            PlayerCharacter.koli => switch (player.currentState) {
+                PlayerStates.normal => {
+                    vel.*.x = math.lerp(vel.*.x, 0, 12 * delta);
+                    vel.*.y = math.lerp(vel.*.y, 0, 12 * delta);
 
-                if (keypress.up) {
-                    vel.*.y -= player.velocity;
-                }
-                if (keypress.down) {
-                    vel.*.y += player.velocity;
-                }
+                    if (keypress.up) {
+                        vel.*.y -= player.velocity;
+                    }
+                    if (keypress.down) {
+                        vel.*.y += player.velocity;
+                    }
 
-                if (keypress.left) {
-                    vel.*.x -= player.velocity;
-                }
-                if (keypress.right) {
-                    vel.*.x += player.velocity;
-                }
+                    if (keypress.left) {
+                        vel.*.x -= player.velocity;
+                    }
+                    if (keypress.right) {
+                        vel.*.x += player.velocity;
+                    }
+                },
+
+                else => unreachable
             },
 
-            else => unreachable
+            PlayerCharacter.sis => switch (player.currentState) {
+                PlayerStates.normal => {
+                    vel.*.x = math.lerp(vel.*.x, 0, 12 * delta);
+                    vel.*.y = math.lerp(vel.*.y, 0, 12 * delta);
+
+                    if (keypress.up2) {
+                        vel.*.y -= player.velocity;
+                    }
+                    if (keypress.down2) {
+                        vel.*.y += player.velocity;
+                    }
+
+                    if (keypress.left2) {
+                        vel.*.x -= player.velocity;
+                    }
+                    if (keypress.right2) {
+                        vel.*.x += player.velocity;
+                    }
+                },
+
+                else => unreachable
+            }
         }
     }
 }

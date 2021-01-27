@@ -13,6 +13,13 @@ pub fn init() void {
     ecsreg.add(ent, defs.Position{.x = 0, .y = 20});
     ecsreg.add(ent, defs.Velocity{.x = 0, .y = 0});
     ecsreg.add(ent, defs.Player{});
+
+    var ent2 = ecsreg.create();
+    ecsreg.add(ent2, defs.Position{.x = 0, .y = 60});
+    ecsreg.add(ent2, defs.Velocity{.x = 0, .y = 0});
+    ecsreg.add(ent2, defs.Player{
+        .character = defs.PlayerCharacter.sis
+    });
 }
 
 pub fn process(delta: f32) void {

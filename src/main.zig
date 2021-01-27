@@ -64,10 +64,10 @@ export fn init() void {
 
     // SETUP QUAD MESH (needed for all the sprites mumbo jumbo)
     const QuadVertices = [_]Vertex{
-        .{ .x = 2, .y = 2, .u = 1, .v = 1},
-        .{ .x = 2, .y = 0, .u = 1, .v = 0},
+        .{ .x = 2, .y = 2, .u = 32767, .v = 32767},
+        .{ .x = 2, .y = 0, .u = 32767, .v = 0},
         .{ .x = 0, .y = 0, .u = 0, .v = 0},
-        .{ .x = 0, .y = 2, .u = 0, .v = 1},
+        .{ .x = 0, .y = 2, .u = 0, .v = 32767},
     };
     const QuadIndices = [_]u16{ 0, 1, 3, 1, 2, 3 };
 

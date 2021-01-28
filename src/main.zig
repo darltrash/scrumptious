@@ -28,7 +28,7 @@ const _keystruct = struct {
     left:   bool = false,
     right:  bool = false,
 
-    attack: bool = false,
+    attack:  bool = false,
 
     up2:     bool = false,
     down2:   bool = false,
@@ -36,7 +36,7 @@ const _keystruct = struct {
     right2:  bool = false,
 
     attack2: bool = false,
-    any:    bool = false
+    any:     bool = false
 };
 var key = _keystruct{};
 
@@ -45,7 +45,6 @@ var pip: sg.Pipeline = .{};
 var bind: sg.Bindings = .{};
 pub var screenWidth: f32 = 0;
 pub var screenHeight: f32 = 0;
-pub var textures: [16]sg.Image = undefined;
 
 var delta: f32 = 0;
 
@@ -66,58 +65,64 @@ export fn init() void {
     sg.setup(.{ .context = sgapp.context() });
     pass_action.colors[0] = .{
         .action = .CLEAR,
-        .val = .{ 0.086, 0.086, 0.113, 1.0 } // Eigengrau rocks, change my mind.
+        .value = .{ // Eigengrau rocks, change my mind.
+            .r = 0.086,
+            .g = 0.086,
+            .b = 0.113,
+            .a = 1.0
+        }
     };
 
     stime.setup();
 
     const N = 0x00000000;
-    const Y = 0xFF0950FF;
+    const Y = 0xFFFFFFFF;
+    const P = 0xFFad03fc;
     const pixels1 = [32*32]u32 { // Much better :)   Still sorry :(
-        N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,N,Y,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,Y,Y,Y,N,N,N,Y,Y,N,N,N,N,Y,Y,N,N,Y,Y,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,Y,Y,Y,N,N,N,Y,N,Y,N,N,N,N,Y,Y,Y,N,N,Y,Y,N,N,N,N,N,N,N,N,
-        N,N,N,N,Y,Y,N,N,N,N,Y,N,N,Y,N,N,Y,Y,N,N,Y,Y,Y,Y,N,N,N,N,Y,N,N,N,
-        N,N,N,N,Y,Y,N,N,N,Y,N,N,N,Y,Y,N,Y,N,N,N,N,Y,N,Y,N,N,N,N,N,N,N,N,
-        N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,
-        N,N,N,N,Y,Y,Y,N,N,N,N,N,Y,Y,N,N,N,N,Y,Y,N,N,Y,Y,N,N,N,N,N,N,N,N,
-        N,N,N,N,Y,Y,Y,N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,Y,N,N,N,N,N,
-        N,N,N,N,N,N,N,N,N,N,Y,Y,N,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,N,N,N,N,Y,Y,N,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,N,N,N,N,Y,Y,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,N,N,N,N,Y,Y,N,N,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,
-        N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+        P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,
+        P,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,N,Y,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,Y,Y,Y,N,N,N,Y,Y,N,N,N,N,Y,Y,N,N,Y,Y,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,Y,Y,Y,N,N,N,Y,N,Y,N,N,N,N,Y,Y,Y,N,N,Y,Y,N,N,N,N,N,N,N,P,
+        P,N,N,N,Y,Y,N,N,N,N,Y,N,N,Y,N,N,Y,Y,N,N,Y,Y,Y,Y,N,N,N,N,Y,N,N,P,
+        P,N,N,N,Y,Y,N,N,N,Y,N,N,N,Y,Y,N,Y,N,N,N,N,Y,N,Y,N,N,N,N,N,N,N,P,
+        P,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,N,N,N,N,N,N,N,P,
+        P,N,N,N,Y,Y,Y,N,N,N,N,N,Y,Y,N,N,N,N,Y,Y,N,N,Y,Y,N,N,N,N,N,N,N,P,
+        P,N,N,N,Y,Y,Y,N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,N,N,Y,Y,Y,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,Y,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,Y,N,N,N,N,P,
+        P,N,N,N,N,N,N,N,N,N,Y,Y,N,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,N,N,N,N,Y,Y,N,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,N,N,N,N,Y,Y,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,N,N,N,N,Y,Y,N,N,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,N,P,
+        P,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,P,
+        P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P
     };
 
     setTexture(newTexture(&pixels1, 32, 32));
 
     // SETUP QUAD MESH (needed for all the sprites mumbo jumbo)
-    const QuadVertices = [_]Vertex{
+    const QuadVertices = [4]Vertex{
         .{ .x = 2, .y = 0, .u = 6553, .v = 6553},
         .{ .x = 2, .y = 2, .u = 6553, .v = 0},
-        .{ .x = 0, .y = 2, .u = 0, .v = 0},
-        .{ .x = 0, .y = 0, .u = 0, .v = 6553},
+        .{ .x = 0, .y = 2, .u = 0,    .v = 0},
+        .{ .x = 0, .y = 0, .u = 0,    .v = 6553},
     };
-    const QuadIndices = [_]u16{ 0, 1, 3, 1, 2, 3 };
+    const QuadIndices = [6]u16{ 0, 1, 3, 1, 2, 3 };
 
     bind.vertex_buffers[0] = sg.makeBuffer(.{ .data = sg.asRange(QuadVertices) });
     bind.index_buffer = sg.makeBuffer(.{
@@ -128,16 +133,18 @@ export fn init() void {
     var pip_desc: sg.PipelineDesc = .{
         .shader = sg.makeShader(shd.shaderDesc(sg.queryBackend())),
         .index_type = .UINT16,
-
-        .blend = .{
-            .enabled = true,
-            .src_factor_rgb = .SRC_ALPHA,
-            .dst_factor_rgb = .ONE_MINUS_SRC_ALPHA,
-            .op_rgb = .ADD,
-            .src_factor_alpha = .SRC_ALPHA,
-            .dst_factor_alpha = .ONE_MINUS_SRC_ALPHA,
-            .op_alpha = .ADD
+        .cull_mode = .FRONT,
+        .depth = .{
+            .compare = .LESS_EQUAL,
+            .write_enabled = true,
         }
+    };
+    pip_desc.colors[0].blend = .{
+        .enabled = true,
+        .src_factor_rgb = .SRC_ALPHA,
+        .dst_factor_rgb = .ONE_MINUS_SRC_ALPHA,
+        .src_factor_alpha = .SRC_ALPHA,
+        .dst_factor_alpha = .ONE_MINUS_SRC_ALPHA,
     };
 
     pip_desc.layout.attrs[shd.ATTR_vs_pos].format = .FLOAT3;

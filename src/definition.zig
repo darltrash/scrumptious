@@ -64,8 +64,8 @@ pub const AABB = struct {
     }
 };
 
-pub const PlayerStates = enum { normal, falling, dizzy };
-pub const PlayerCharacter = enum { koli, sis }; // koli is his name.
+pub const PlayerStates = enum(u4) { normal, falling, dizzy };
+pub const PlayerCharacter = enum(u2) { koli, sis }; // koli is his name.
 pub const Player = struct {
     enableMovement: bool = true,
     currentState: PlayerStates = PlayerStates.normal,

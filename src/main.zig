@@ -115,7 +115,7 @@ export fn init() void {
 
     setTexture(newTexture(&pixels1, 32, 32));
 
-    // SETUP QUAD MESH (needed for all the sprites mumbo jumbo)
+    // SETUP QUAD MESH!! (needed for all the sprites mumbo jumbo)
     const QuadVertices = [4]Vertex{
         .{ .x = 2, .y = 0, .u = 6553, .v = 6553},
         .{ .x = 2, .y = 2, .u = 6553, .v = 0},

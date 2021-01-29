@@ -13,43 +13,13 @@ const vec3 = @import("math.zig").Vec3;
 const mat4 = @import("math.zig").Mat4;
 const shd = @import("shaders/mainshader.zig");
 
-pub const state = enum(u2) { game };
-const gamestate = @import("game.zig");
-pub var currentState: state = undefined;
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
-const Vertex = packed struct {
-    x: f32 = 0,
-    y: f32 = 0,
-    z: f32 = 0,
-    color: u32 = 0xFFFFFFFF,
-    u: i16, v: i16
+const Texture = struct {
+    sktexture: sg.Image,
+    width: u32, height: u32
 };
-
-const _keystruct = struct {
-    up:     bool = false,
-    down:   bool = false,
-    left:   bool = false,
-    right:  bool = false,
-
-    attack:  bool = false,
-
-    up2:     bool = false,
-    down2:   bool = false,
-    left2:   bool = false,
-    right2:  bool = false,
-
-    attack2: bool = false,
-    any:     bool = false
-};
-var key = _keystruct{};
-
-var pass_action: sg.PassAction = .{};
-var pip: sg.Pipeline = .{};
-var bind: sg.Bindings = .{};
-pub var screenWidth: f32 = 0;
-pub var screenHeight: f32 = 0;
-
-var delta: f32 = 0;
+var TextureMap: std.StringHashMap = undefined;
 
 pub fn newTexture(data: anytype, width: i32, height: i32) sg.Image {
     var img_desc: sg.ImageDesc = .{
@@ -76,11 +46,36 @@ pub fn setTexture(data: sg.Image) void {
     bind.fs_images[shd.SLOT_tex] = data;
 }
 
+pub fn rectangle(x: f32, y: f32, w: f32, h: f32) void {
+    const scale = mat4.scale(w/screenWidth, h/screenHeight, 1);
+    const trans = mat4.translate(.{
+        .x = x / screenWidth,
+        .y = y / -screenHeight,
+        .z = 0
+    });
+
+    sg.applyUniforms(.VS, shd.SLOT_vs_params, sg.asRange(shd.VsParams {
+        .mvp = mat4.mul(trans, scale)
+    }));
+
+    sg.draw(0, 6, 1);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+var pass_action: sg.PassAction = .{};
+var pip: sg.Pipeline = .{};
+var bind: sg.Bindings = .{};
+const Vertex = packed struct {
+    x: f32 = 0, y: f32 = 0, z: f32 = 0,
+    color: u32 = 0xFFFFFFFF, u: i16, v: i16
+};
+
 export fn init() void {
     sg.setup(.{ .context = sgapp.context() });
     pass_action.colors[0] = .{
         .action = .CLEAR,
-        .value = .{ // Again, Eigengrau rocks. change my mind.
+        .value = .{
             .r = 0.086,
             .g = 0.086,
             .b = 0.113,
@@ -88,7 +83,6 @@ export fn init() void {
         }
     };
 
-    // SETUP QUAD MESH!! (needed for all the sprites mumbo jumbo)
     const QuadVertices = [4]Vertex{
         .{ .x = 2, .y = 0, .u = 6553, .v = 6553},
         .{ .x = 2, .y = 2, .u = 6553, .v = 0},
@@ -140,22 +134,18 @@ export fn init() void {
     }
 }
 
-pub fn rectangle(x: f32, y: f32, w: f32, h: f32) void {
-    const scale = mat4.scale(w/screenWidth, h/screenHeight, 1);
-    const trans = mat4.translate(.{
-        .x = x / screenWidth,
-        .y = y / -screenHeight,
-        .z = 0
-    });
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
-    sg.applyUniforms(.VS, shd.SLOT_vs_params, sg.asRange(shd.VsParams {
-        .mvp = mat4.mul(trans, scale)
-    }));
+pub const state = enum(u2) { game };
+const gamestate = @import("game.zig");
+pub var currentState: state = undefined;
 
-    sg.draw(0, 6, 1);
-}
+pub var screenWidth: f32 = 0;
+pub var screenHeight: f32 = 0;
 
+var delta: f32 = 0;
 var last_time: u64 = 0;
+
 export fn frame() void {
     screenWidth  = sapp.widthf();
     screenHeight = sapp.heightf();
@@ -188,12 +178,25 @@ export fn frame() void {
     delta = @floatCast(f32, stime.sec(stime.laptime(&last_time)));
 }
 
-export fn cleanup() void {
-    switch(currentState) {
-        state.game => gamestate.cleanup()
-    }
-    sg.shutdown();
-}
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+const _keystruct = struct {
+    up:     bool = false,
+    down:   bool = false,
+    left:   bool = false,
+    right:  bool = false,
+
+    attack:  bool = false,
+
+    up2:     bool = false,
+    down2:   bool = false,
+    left2:   bool = false,
+    right2:  bool = false,
+
+    attack2: bool = false,
+    any:     bool = false
+};
+var key = _keystruct{};
 
 export fn input(ev: ?*const sapp.Event) void {
     const event = ev.?;
@@ -219,6 +222,8 @@ pub fn getKeys() *_keystruct {
     return &key;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
 pub fn main() void {
     setState(state.game);
     sapp.run(.{
@@ -231,6 +236,17 @@ pub fn main() void {
         .window_title = "PROJECT SCRUMPTIOUS",
     });
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+export fn cleanup() void {
+    switch(currentState) {
+        state.game => gamestate.cleanup()
+    }
+    sg.shutdown();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
 pub fn setState(newState: state) void {
     switch(currentState) {

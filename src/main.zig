@@ -155,6 +155,8 @@ export fn init() void {
         sdtx.setup(sdtx_desc);
         sdtx.font(0);
     }
+
+    setState(state.game);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -246,7 +248,6 @@ pub fn getKeys() *_keystruct { return &key; }
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 pub fn main() void {
-    setState(state.game);
     sapp.run(.{
         .init_cb = init,
         .frame_cb = frame,
@@ -254,7 +255,7 @@ pub fn main() void {
         .event_cb = input,
         .width = 1024,
         .height = 600,
-        .window_title = "PROJECT SCRUMPTIOUS",
+        .window_title = "Scrumptious",
     });
 }
 

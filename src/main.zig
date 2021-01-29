@@ -127,6 +127,8 @@ export fn init() void {
     stime.setup();
 
     //setTexture(newTexture(&@import("guy.zig").pixels1, 32, 32));
+
+    // Had to replace Mr.SpriteGuy, Rest in peace :(
     var testone = PNGTexture("sprites/hello.png") catch unreachable;
     setTexture(testone);
 

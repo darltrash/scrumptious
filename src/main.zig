@@ -1,7 +1,7 @@
 const DEBUGMODE = true;
 
 const std = @import("std");
-const sg = @import("sokol").gfx;
+pub const sg = @import("sokol").gfx;
 const sapp = @import("sokol").app;
 const stime = @import("sokol").time;
 const sgapp = @import("sokol").app_gfx_glue;
@@ -13,40 +13,58 @@ const vec3 = @import("math.zig").Vec3;
 const mat4 = @import("math.zig").Mat4;
 const shd = @import("shaders/mainshader.zig");
 
+var nothing: sg.Image = undefined;
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-const Texture = struct {
+pub const Texture = struct {
     sktexture: sg.Image,
-    width: u32, height: u32
+    width: u32, height: u32,
+
+    pub fn fromRaw(data: anytype, width: u32, height: u32) Texture {
+        var img_desc: sg.ImageDesc = .{ .width = @intCast(i32, width), .height = @intCast(i32, height) };
+        img_desc.data.subimage[0][0] = sg.asRange(data);
+
+        return Texture {
+            .sktexture = sg.makeImage(img_desc),
+            .width = width, .height = height,
+        };
+    }
+
+    pub fn fromPNGPath(filename: []const u8) !Texture {
+        var pngdata = try PNG.fromFile(filename);
+
+        var img_desc: sg.ImageDesc = .{
+            .width = @intCast(i32, pngdata.width),
+            .height = @intCast(i32, pngdata.height)
+        };
+        img_desc.data.subimage[0][0] = sg.asRange(pngdata.raw);
+
+        return Texture {
+            .sktexture = sg.makeImage(img_desc),
+            .width = pngdata.width, .height = pngdata.height,
+        };
+    }
+
+    pub fn draw(self: *Texture, x: f32, y: f32, sx: f32, sy: f32) void {
+        bind.fs_images[shd.SLOT_tex] = self.sktexture;
+        const scale = mat4.scale((@intToFloat(f32, self.width) * sx)/screenWidth, (@intToFloat(f32, self.height) * sy)/screenHeight, 1);
+        const trans = mat4.translate(.{
+            .x = x / screenWidth,
+            .y = y / -screenHeight,
+            .z = 0
+        });
+
+        sg.applyUniforms(.VS, shd.SLOT_vs_params, sg.asRange(shd.VsParams {
+            .mvp = mat4.mul(trans, scale)
+        }));
+
+        sg.draw(0, 6, 1);
+    }
 };
-var TextureMap: std.StringHashMap = undefined;
-
-pub fn newTexture(data: anytype, width: i32, height: i32) sg.Image {
-    var img_desc: sg.ImageDesc = .{
-        .width = width,
-        .height = height,
-    };
-    img_desc.data.subimage[0][0] = sg.asRange(data);
-    return sg.makeImage(img_desc);
-}
-
-pub fn PNGTexture(filename: []const u8) !sg.Image {
-    var pngdata = try PNG.fromFile(filename);
-
-    var img_desc: sg.ImageDesc = .{
-        .width = @intCast(i32, pngdata.width),
-        .height = @intCast(i32, pngdata.height),
-    };
-    img_desc.data.subimage[0][0] = sg.asRange(pngdata.raw);
-
-    return sg.makeImage(img_desc);
-}
-
-pub fn setTexture(data: sg.Image) void {
-    bind.fs_images[shd.SLOT_tex] = data;
-}
 
 pub fn rectangle(x: f32, y: f32, w: f32, h: f32) void {
+    bind.fs_images[shd.SLOT_tex] = nothing;
     const scale = mat4.scale(w/screenWidth, h/screenHeight, 1);
     const trans = mat4.translate(.{
         .x = x / screenWidth,
@@ -82,6 +100,11 @@ export fn init() void {
             .a = 1.0
         }
     };
+
+    var img_desc: sg.ImageDesc = .{ .width = 1, .height = 1 };
+    img_desc.data.subimage[0][0] = sg.asRange([_]u32{0xFFFFFFFF});
+    nothing = sg.makeImage(img_desc);
+    bind.fs_images[shd.SLOT_tex] = nothing;
 
     const QuadVertices = [4]Vertex{
         .{ .x = 2, .y = 0, .u = 6553, .v = 6553},
@@ -123,8 +146,8 @@ export fn init() void {
     //setTexture(newTexture(&@import("guy.zig").pixels1, 32, 32));
 
     // Had to replace Mr.SpriteGuy, Rest in peace :(
-    var testone = PNGTexture("sprites/hello.png") catch unreachable;
-    setTexture(testone);
+    //var testone = PNGTexture("sprites/hello.png") catch unreachable;
+    //setTexture(testone);
 
     if (comptime DEBUGMODE) {
         var sdtx_desc: sdtx.Desc = .{};
@@ -218,9 +241,7 @@ export fn input(ev: ?*const sapp.Event) void {
     }
 }
 
-pub fn getKeys() *_keystruct {
-    return &key;
-}
+pub fn getKeys() *_keystruct { return &key; }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 

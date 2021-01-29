@@ -1,10 +1,11 @@
 const std = @import("std");
 const ecs = @import("ecs");
 const defs = @import("definition.zig");
-const sokol = @import("sokol");
+const main = @import("main.zig");
 
 var gravity = defs._GRAVITY{ .x = 0, .y = 5 };
 var ecsreg: ecs.Registry = undefined;
+var lilguy: main.Texture = undefined;
 
 pub fn init() void {
     ecsreg = ecs.Registry.init(std.heap.c_allocator);
@@ -20,6 +21,8 @@ pub fn init() void {
     ecsreg.add(ent2, defs.Player{
         .character = defs.PlayerCharacter.sis
     });
+
+    lilguy = main.Texture.fromPNGPath("sprites/hello.png") catch unreachable;
 }
 
 pub fn process(delta: f32) void {
@@ -30,5 +33,7 @@ pub fn process(delta: f32) void {
 
 pub fn draw(delta: f32) void {
     defs.drawPlayer(&ecsreg, delta);
+    lilguy.draw(40, 40, 2, 2);
 }
+
 pub fn cleanup() void { ecsreg.deinit(); }

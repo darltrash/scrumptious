@@ -1,10 +1,13 @@
-const std = @import("std");
+const DEBUGMODE = true;
 
+const std = @import("std");
 const sg = @import("sokol").gfx;
 const sapp = @import("sokol").app;
 const stime = @import("sokol").time;
 const sgapp = @import("sokol").app_gfx_glue;
-const sfetch = @import("sokol").fetch;
+const sdtx = @import("sokol").debugtext;
+
+const PNG = @import("fileformats").Png;
 
 const vec3 = @import("math.zig").Vec3;
 const mat4 = @import("math.zig").Mat4;
@@ -48,12 +51,24 @@ pub var screenHeight: f32 = 0;
 
 var delta: f32 = 0;
 
-pub fn newTexture(data: *const [1024]u32, width: i32, height: i32) sg.Image {
+pub fn newTexture(data: anytype, width: i32, height: i32) sg.Image {
     var img_desc: sg.ImageDesc = .{
         .width = width,
         .height = height,
     };
     img_desc.data.subimage[0][0] = sg.asRange(data);
+    return sg.makeImage(img_desc);
+}
+
+pub fn PNGTexture(filename: []const u8) !sg.Image {
+    var pngdata = try PNG.fromFile(filename);
+
+    var img_desc: sg.ImageDesc = .{
+        .width = @intCast(i32, pngdata.width),
+        .height = @intCast(i32, pngdata.height),
+    };
+    img_desc.data.subimage[0][0] = sg.asRange(pngdata.raw);
+
     return sg.makeImage(img_desc);
 }
 
@@ -65,55 +80,13 @@ export fn init() void {
     sg.setup(.{ .context = sgapp.context() });
     pass_action.colors[0] = .{
         .action = .CLEAR,
-        .value = .{ // Eigengrau rocks, change my mind.
+        .value = .{ // Again, Eigengrau rocks. change my mind.
             .r = 0.086,
             .g = 0.086,
             .b = 0.113,
             .a = 1.0
         }
     };
-
-    stime.setup();
-
-    const N = 0x00000000;
-    const Y = 0xFFFFFFFF;
-    const P = 0xFFad03fc;
-    const pixels1 = [32*32]u32 { // Much better :)   Still sorry :(
-        P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,
-        P,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,N,Y,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,Y,Y,Y,N,N,N,Y,Y,N,N,N,N,Y,Y,N,N,Y,Y,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,Y,Y,Y,N,N,N,Y,N,Y,N,N,N,N,Y,Y,Y,N,N,Y,Y,N,N,N,N,N,N,N,P,
-        P,N,N,N,Y,Y,N,N,N,N,Y,N,N,Y,N,N,Y,Y,N,N,Y,Y,Y,Y,N,N,N,N,Y,N,N,P,
-        P,N,N,N,Y,Y,N,N,N,Y,N,N,N,Y,Y,N,Y,N,N,N,N,Y,N,Y,N,N,N,N,N,N,N,P,
-        P,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,N,N,N,N,N,N,N,P,
-        P,N,N,N,Y,Y,Y,N,N,N,N,N,Y,Y,N,N,N,N,Y,Y,N,N,Y,Y,N,N,N,N,N,N,N,P,
-        P,N,N,N,Y,Y,Y,N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,N,N,Y,Y,Y,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,Y,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,Y,N,N,N,N,P,
-        P,N,N,N,N,N,N,N,N,N,Y,Y,N,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,N,N,N,N,Y,Y,N,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,N,N,N,N,Y,Y,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,N,N,N,N,Y,Y,N,N,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,N,N,N,N,Y,Y,Y,Y,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,N,N,N,Y,Y,Y,N,N,N,N,N,N,Y,Y,N,N,N,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,Y,Y,Y,Y,Y,Y,N,N,N,N,N,N,Y,Y,Y,Y,Y,N,N,N,N,N,N,N,N,P,
-        P,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,P,
-        P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P
-    };
-
-    setTexture(newTexture(&pixels1, 32, 32));
 
     // SETUP QUAD MESH!! (needed for all the sprites mumbo jumbo)
     const QuadVertices = [4]Vertex{
@@ -151,10 +124,21 @@ export fn init() void {
     pip_desc.layout.attrs[shd.ATTR_vs_color0].format = .UBYTE4N;
     pip_desc.layout.attrs[shd.ATTR_vs_texcoord0].format = .SHORT2N;
     pip = sg.makePipeline(pip_desc);
+    stime.setup();
+
+    //setTexture(newTexture(&@import("guy.zig").pixels1, 32, 32));
+    var testone = PNGTexture("sprites/hello.png") catch unreachable;
+    setTexture(testone);
+
+    if (comptime DEBUGMODE) {
+        var sdtx_desc: sdtx.Desc = .{};
+        sdtx_desc.fonts[0] = sdtx.fontKc853();
+        sdtx.setup(sdtx_desc);
+        sdtx.font(0);
+    }
 }
 
 pub fn rectangle(x: f32, y: f32, w: f32, h: f32) void {
-    // Sorry for the poopcode in here :(
     const scale = mat4.scale(w/screenWidth, h/screenHeight, 1);
     const trans = mat4.translate(.{
         .x = x / screenWidth,
@@ -169,24 +153,37 @@ pub fn rectangle(x: f32, y: f32, w: f32, h: f32) void {
     sg.draw(0, 6, 1);
 }
 
+var last_time: u64 = 0;
 export fn frame() void {
     screenWidth  = sapp.widthf();
     screenHeight = sapp.heightf();
 
-    var preframe = stime.now();
-        switch(currentState) {
-            state.game => gamestate.process(delta)
-        }
+    if (comptime DEBUGMODE) {
+        sdtx.canvas(screenWidth * 0.5, screenHeight * 0.5);
+        sdtx.origin(1, 1);
 
-        sg.beginDefaultPass(pass_action, sapp.width(), sapp.height());
-        sg.applyPipeline(pip);
-        sg.applyBindings(bind);
-            switch(currentState) {
-                state.game => gamestate.draw(delta)
-            }
-        sg.endPass();
-        sg.commit();
-    delta = @floatCast(f32, stime.sec(stime.diff(stime.now(), preframe)));
+        sdtx.color1i(0xFFAA67C7);
+        sdtx.print("Project Scrumptious (Debug)\n===========================\n\n", .{});
+
+        sdtx.color1i(0xFFFFAE00);
+        sdtx.print("hello =D\nwelcome to my little project!", .{});
+    }
+
+    switch(currentState) {
+        state.game => gamestate.process(delta)
+    }
+
+    sg.beginDefaultPass(pass_action, sapp.width(), sapp.height());
+    sg.applyPipeline(pip);
+    sg.applyBindings(bind);
+        switch(currentState) {
+            state.game => gamestate.draw(delta)
+        }
+        if (comptime DEBUGMODE) { sdtx.draw(); }
+    sg.endPass();
+    sg.commit();
+
+    delta = @floatCast(f32, stime.sec(stime.laptime(&last_time)));
 }
 
 export fn cleanup() void {

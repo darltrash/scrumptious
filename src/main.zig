@@ -48,6 +48,8 @@ pub const Texture = struct {
 
     pub fn draw(self: *Texture, x: f32, y: f32, sx: f32, sy: f32) void {
         bind.fs_images[shd.SLOT_tex] = self.sktexture;
+        sg.applyBindings(bind);
+
         const scale = mat4.scale((@intToFloat(f32, self.width) * sx)/screenWidth, (@intToFloat(f32, self.height) * sy)/screenHeight, 1);
         const trans = mat4.translate(.{
             .x = x / screenWidth,
@@ -65,6 +67,8 @@ pub const Texture = struct {
 
 pub fn rectangle(x: f32, y: f32, w: f32, h: f32) void {
     bind.fs_images[shd.SLOT_tex] = nothing;
+    sg.applyBindings(bind);
+
     const scale = mat4.scale(w/screenWidth, h/screenHeight, 1);
     const trans = mat4.translate(.{
         .x = x / screenWidth,
@@ -75,7 +79,6 @@ pub fn rectangle(x: f32, y: f32, w: f32, h: f32) void {
     sg.applyUniforms(.VS, shd.SLOT_vs_params, sg.asRange(shd.VsParams {
         .mvp = mat4.mul(trans, scale)
     }));
-
     sg.draw(0, 6, 1);
 }
 
@@ -100,6 +103,8 @@ export fn init() void {
             .a = 1.0
         }
     };
+
+    //std.debug.warn("{}", .{sgapp.context()});
 
     var img_desc: sg.ImageDesc = .{ .width = 1, .height = 1 };
     img_desc.data.subimage[0][0] = sg.asRange([_]u32{0xFFFFFFFF});
@@ -142,12 +147,6 @@ export fn init() void {
     pip_desc.layout.attrs[shd.ATTR_vs_texcoord0].format = .SHORT2N;
     pip = sg.makePipeline(pip_desc);
     stime.setup();
-
-    //setTexture(newTexture(&@import("guy.zig").pixels1, 32, 32));
-
-    // Had to replace Mr.SpriteGuy, Rest in peace :(
-    //var testone = PNGTexture("sprites/hello.png") catch unreachable;
-    //setTexture(testone);
 
     if (comptime DEBUGMODE) {
         var sdtx_desc: sdtx.Desc = .{};

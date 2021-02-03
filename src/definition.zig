@@ -3,6 +3,7 @@ const ecs = @import("ecs");
 const math = @import("math.zig");
 const sokol = @import("sokol");
 const main = @import("main.zig");
+const Texture = main.Texture;
 
 pub const _GRAVITY = struct { x: f32, y: f32 };
 pub const Position = struct { x: f32, y: f32 };
@@ -39,11 +40,16 @@ pub fn processGravity(reg: *ecs.Registry, gravity: _GRAVITY, delta: f32) void {
     }
 }
 
-pub const Drawable = struct {
-    ox: f32, oy: f32,
-    w: f32, h: f32,
-    sx: f32 = 1, sy: f32 = 1
-};
+pub fn drawPositions(reg: *ecs.Registry, delta: f32) void {
+    var view = reg.view(.{ Position }, .{});
+    var iter = view.iterator();
+
+    while (iter.next()) |entity| {
+        var pos = view.get(Position, entity);
+
+        main.rectangle(pos.x, pos.y, 2, 2);
+    }
+}
 
 // Name     Static     Collides with
 // -------- ---------- -------------------
@@ -64,14 +70,33 @@ pub const AABB = struct {
     }
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 pub const PlayerStates = enum(u4) { normal, falling, dizzy };
 pub const PlayerCharacter = enum(u2) { koli, sis }; // koli is his name.
 pub const Player = struct {
-    enableMovement: bool = true,
+    enableMovement: bool = true, velocity: f32 = 100,
     currentState: PlayerStates = PlayerStates.normal,
     character: PlayerCharacter = PlayerCharacter.koli,
-    velocity: f32 = 100
+
+    texture_idle: Texture,
 };
+
+pub fn initPlayer(char: PlayerCharacter) Player {
+    var texture_idle: Texture = undefined;
+    switch(char) {
+        .koli => {
+            texture_idle = Texture.fromPNGPath("sprites/koli.png") catch @panic("Error while loading koli's textures!");
+        },
+        else => @panic("Only koli has been implemented yet, sorry :(")
+    }
+
+    var player: Player = .{
+        .character = char,
+        .texture_idle = texture_idle,
+    };
+    return player;
+}
 
 pub fn processPlayer(reg: *ecs.Registry, delta: f32) void {
     var view = reg.view(.{ Velocity, Player }, .{});
@@ -83,8 +108,8 @@ pub fn processPlayer(reg: *ecs.Registry, delta: f32) void {
         var keypress = main.getKeys();
 
         switch (player.character) {
-            PlayerCharacter.koli => switch (player.currentState) {
-                PlayerStates.normal => {
+            .koli => switch (player.currentState) {
+                .normal => {
                     vel.*.x = math.lerp(vel.*.x, 0, 12 * delta);
                     vel.*.y = math.lerp(vel.*.y, 0, 12 * delta);
 
@@ -106,8 +131,8 @@ pub fn processPlayer(reg: *ecs.Registry, delta: f32) void {
                 else => unreachable
             },
 
-            PlayerCharacter.sis => switch (player.currentState) {
-                PlayerStates.normal => {
+            .sis => switch (player.currentState) {
+                .normal => {
                     vel.*.x = math.lerp(vel.*.x, 0, 12 * delta);
                     vel.*.y = math.lerp(vel.*.y, 0, 12 * delta);
 
@@ -138,11 +163,13 @@ pub fn drawPlayer(reg: *ecs.Registry, delta: f32) void {
 
     while (iter.next()) |entity| {
         var pos = view.get(Position, entity);
-        var vel = view.get(Velocity, entity);
+        var pla = view.get(Player, entity);
 
-        main.rectangle(pos.x, pos.y, 64, 64);
+        pla.*.texture_idle.draw(pos.x, pos.y, 2, 2);
     }
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 pub const Tile = struct {
     static: bool = true
